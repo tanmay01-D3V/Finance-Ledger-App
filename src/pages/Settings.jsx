@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useFinancialStore } from "../store/useFinancialStore";
+import { useLedgerStore } from "../store/useLedgerStore";
 import { FiSettings, FiDollarSign, FiCalendar, FiShield } from "react-icons/fi";
 
 const Settings = () => {
@@ -10,7 +10,7 @@ const Settings = () => {
     setStartingBalance,
     setTargetRunway,
     setCurrency
-  } = useFinancialStore();
+  } = useLedgerStore();
 
   const [localBalance, setLocalBalance] = useState(startingBalance);
   const [localRunway, setLocalRunway] = useState(targetRunway);

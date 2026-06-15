@@ -1,20 +1,16 @@
-import { useFinancialStore } from "../../store/useFinancialStore";
+import { useLedgerStore } from "../../store/useLedgerStore";
 import { Link } from "react-router-dom";
 import { FiArrowUpRight, FiArrowDownRight } from "react-icons/fi";
 
 const RecentTransactionsTable = () => {
-  const { transactions, currency } = useFinancialStore();
-
-  // Slice the latest 5 transactions
+  const { transactions, currency } = useLedgerStore();
   const recentTx = transactions.slice(0, 5);
 
   return (
     <div className="mx-8 bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">
-            Recent Transactions
-          </h3>
+          <h3 className="text-xl font-bold text-gray-900">Recent Transactions</h3>
           <p className="text-xs text-gray-500 mt-1">
             Overview of the latest cash flows in and out.
           </p>
@@ -64,9 +60,7 @@ const RecentTransactionsTable = () => {
                     </span>
                     {tx.description}
                   </td>
-                  <td className="px-6 py-4 text-gray-600 font-medium">
-                    {tx.category}
-                  </td>
+                  <td className="px-6 py-4 text-gray-600 font-medium">{tx.category}</td>
                   <td className="px-6 py-4 text-gray-500">
                     {new Date(tx.date).toLocaleDateString(undefined, {
                       year: "numeric",
@@ -76,9 +70,7 @@ const RecentTransactionsTable = () => {
                   </td>
                   <td
                     className={`px-6 py-4 font-bold text-base ${
-                      tx.type === "income"
-                        ? "text-emerald-600"
-                        : "text-rose-600"
+                      tx.type === "income" ? "text-emerald-600" : "text-rose-600"
                     }`}
                   >
                     {tx.type === "income" ? "+" : "-"}

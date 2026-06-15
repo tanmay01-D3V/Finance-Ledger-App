@@ -12,7 +12,7 @@ const LedgerHeader = () => {
         );
 
         setQuote(res.data.content);
-      } catch (err) {
+      } catch {
         setQuote(
           "Financial freedom is available to those who learn about it and work for it."
         );

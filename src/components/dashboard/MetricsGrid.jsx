@@ -1,102 +1,70 @@
 import MetricCard from "./MetricCard";
-import { useFinancialStore } from "../../store/useFinancialStore";
+import { useLedgerStore } from "../../store/useLedgerStore";
+import { useProjection } from "../../hooks/useProjection";
+import { computeCurrentBalance } from "../../utils/projectCashflow";
 import { FiDollarSign, FiArrowUpRight, FiArrowDownRight, FiClock } from "react-icons/fi";
 
 const MetricsGrid = () => {
-  const { transactions, startingBalance, currency } = useFinancialStore();
+  const { transactions, startingBalance } = useLedgerStore();
+  const { baselineRunway, formatCurrency } = useProjection({ projectionMonths: 12 });
 
-  // Helper to format currency
-  const formatVal = (val) => {
-    return `${currency}${Math.abs(val).toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    })}`;
-  };
+  const totalSavings = computeCurrentBalance(startingBalance, transactions);
 
-  // 1. Total Savings Calculation (Starting Balance + All completed Income - All completed Expense)
-  const completedIncomeAll = transactions
-    .filter((t) => t.type === "income" && t.status === "completed")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const latestMonth =
+    transactions.map((t) => t.date.slice(0, 7)).sort().pop() || "2026-06";
+  const prevMonth = subtractMonth(latestMonth);
 
-  const completedExpenseAll = transactions
-    .filter((t) => t.type === "expense" && t.status === "completed")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const monthIncome = (monthKey) =>
+    transactions
+      .filter((t) => t.date.startsWith(monthKey) && t.type === "income" && t.status === "completed")
+      .reduce((sum, t) => sum + t.amount, 0);
 
-  const totalSavings = startingBalance + completedIncomeAll - completedExpenseAll;
+  const monthExpense = (monthKey) =>
+    transactions
+      .filter((t) => t.date.startsWith(monthKey) && t.type === "expense" && t.status === "completed")
+      .reduce((sum, t) => sum + t.amount, 0);
 
-  // Compute savings end of May to find percentage change
-  const mayIncomeAll = transactions
-    .filter((t) => t.date < "2026-06-01" && t.type === "income" && t.status === "completed")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const juneIncome = monthIncome(latestMonth);
+  const mayIncome = monthIncome(prevMonth);
+  const juneExpense = monthExpense(latestMonth);
+  const mayExpense = monthExpense(prevMonth);
 
-  const mayExpenseAll = transactions
-    .filter((t) => t.date < "2026-06-01" && t.type === "expense" && t.status === "completed")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const savingsPrevMonth = computeCurrentBalance(
+    startingBalance,
+    transactions.filter((t) => t.date < `${latestMonth}-01`)
+  );
 
-  const totalSavingsMay = startingBalance + mayIncomeAll - mayExpenseAll;
-  const savingsChange = totalSavingsMay > 0
-    ? ((totalSavings - totalSavingsMay) / totalSavingsMay) * 100
-    : 0;
+  const savingsChange =
+    savingsPrevMonth > 0 ? ((totalSavings - savingsPrevMonth) / savingsPrevMonth) * 100 : 0;
+  const incomeChange = mayIncome > 0 ? ((juneIncome - mayIncome) / mayIncome) * 100 : 0;
+  const expenseChange = mayExpense > 0 ? ((juneExpense - mayExpense) / mayExpense) * 100 : 0;
 
-  // 2. Monthly Income (June 2026)
-  const juneIncome = transactions
-    .filter((t) => t.type === "income" && t.date.startsWith("2026-06"))
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const mayIncome = transactions
-    .filter((t) => t.type === "income" && t.date.startsWith("2026-05"))
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const incomeChange = mayIncome > 0
-    ? ((juneIncome - mayIncome) / mayIncome) * 100
-    : 0;
-
-  // 3. Monthly Expenses (June 2026)
-  const juneExpense = transactions
-    .filter((t) => t.type === "expense" && t.date.startsWith("2026-06"))
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const mayExpense = transactions
-    .filter((t) => t.type === "expense" && t.date.startsWith("2026-05"))
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const expenseChange = mayExpense > 0
-    ? ((juneExpense - mayExpense) / mayExpense) * 100
-    : 0;
-
-  // 4. Runway calculation
-  // Net Burn = June Expenses - June Income
   const netBurn = juneExpense - juneIncome;
-  let runwayText = "Stable";
+  let runwayText = baselineRunway.label;
   let runwayChange = "0.0 Months";
   let runwayPositive = true;
 
-  if (netBurn > 0) {
-    const runwayMonths = totalSavings / netBurn;
-    runwayText = `${runwayMonths.toFixed(1)} Months`;
-
-    // Calculate runway change compared to May
-    const mayNetBurn = mayExpense - mayIncome;
-    if (mayNetBurn > 0) {
-      const mayRunwayMonths = totalSavingsMay / mayNetBurn;
-      const runwayDiff = runwayMonths - mayRunwayMonths;
-      runwayChange = `${runwayDiff >= 0 ? "+" : ""}${runwayDiff.toFixed(1)} Months`;
-      runwayPositive = runwayDiff >= 0;
-    } else {
-      runwayChange = "- Runway Established";
-      runwayPositive = false;
-    }
-  } else {
+  if (baselineRunway.isFullyFunded) {
     runwayText = "Stable (No Burn)";
     runwayChange = "Surplus";
-    runwayPositive = true;
+  } else if (Number.isFinite(baselineRunway.runwayMonths)) {
+    runwayText = `${baselineRunway.runwayMonths.toFixed(1)} Months`;
+    const mayNetBurn = mayExpense - mayIncome;
+    if (mayNetBurn > 0 && savingsPrevMonth > 0) {
+      const mayRunway = savingsPrevMonth / mayNetBurn;
+      const diff = baselineRunway.runwayMonths - mayRunway;
+      runwayChange = `${diff >= 0 ? "+" : ""}${diff.toFixed(1)} Months`;
+      runwayPositive = diff >= 0;
+    }
+  } else if (netBurn > 0) {
+    runwayText = `${(totalSavings / netBurn).toFixed(1)} Months`;
   }
 
   return (
     <div className="px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <MetricCard
         title="Total Savings"
-        value={formatVal(totalSavings)}
+        value={formatCurrency(totalSavings)}
         change={`${savingsChange >= 0 ? "+" : ""}${savingsChange.toFixed(1)}%`}
         positive={savingsChange >= 0}
         icon={FiDollarSign}
@@ -104,7 +72,7 @@ const MetricsGrid = () => {
 
       <MetricCard
         title="Monthly Income"
-        value={formatVal(juneIncome)}
+        value={formatCurrency(juneIncome)}
         change={`${incomeChange >= 0 ? "+" : ""}${incomeChange.toFixed(1)}%`}
         positive={incomeChange >= 0}
         icon={FiArrowUpRight}
@@ -112,9 +80,9 @@ const MetricsGrid = () => {
 
       <MetricCard
         title="Monthly Expenses"
-        value={formatVal(juneExpense)}
+        value={formatCurrency(juneExpense)}
         change={`${expenseChange >= 0 ? "+" : ""}${expenseChange.toFixed(1)}%`}
-        positive={expenseChange <= 0} // expense going down is positive
+        positive={expenseChange <= 0}
         icon={FiArrowDownRight}
       />
 
@@ -128,5 +96,11 @@ const MetricsGrid = () => {
     </div>
   );
 };
+
+function subtractMonth(yyyyMm) {
+  const [y, m] = yyyyMm.split("-").map(Number);
+  const date = new Date(y, m - 2, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
 
 export default MetricsGrid;

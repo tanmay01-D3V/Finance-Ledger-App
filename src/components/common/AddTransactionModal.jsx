@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { useFinancialStore } from "../../store/useFinancialStore";
+import { useLedgerStore } from "../../store/useLedgerStore";
 import { FiX, FiCheck, FiDollarSign } from "react-icons/fi";
 
 const AddTransactionModal = ({ isOpen, onClose }) => {
-  const { addTransaction, currency } = useFinancialStore();
+  const { addTransaction, currency } = useLedgerStore();
 
   const [description, setDescription] = useState("");
   const [type, setType] = useState("expense");

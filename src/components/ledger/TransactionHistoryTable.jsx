@@ -1,4 +1,6 @@
+// Import React hooks for state management and refs
 import { useState, useRef } from "react";
+// Import Feather icons for UI elements
 import {
   FiCheckCircle,
   FiClock,
@@ -8,34 +10,47 @@ import {
   FiChevronRight,
   FiTrash2
 } from "react-icons/fi";
+// Import Zustand store for transaction actions
 import { useLedgerStore } from "../../store/useLedgerStore";
+// Import encrypted export/download utility
 import { downloadEncryptedExport } from "../../utils/encryptExport";
 
+// Number of transactions displayed per page
 const PAGE_SIZE = 10;
 
+// Component displaying paginated transaction history table with export/import controls
 const TransactionHistoryTable = () => {
+  // Destructure store state and actions
   const { transactions, currency, deleteTransaction, exportLedger, importEncryptedLedger } =
     useLedgerStore();
+  // Current page index for pagination
   const [page, setPage] = useState(0);
+  // Active category filter, defaults to "all"
   const [categoryFilter, setCategoryFilter] = useState("all");
+  // Reference to the hidden file input for import
   const fileInputRef = useRef(null);
 
+  // Derive unique category list from transactions, prepend "all" option
   const categories = ["all", ...new Set(transactions.map((t) => t.category))];
 
+  // Filter transactions by selected category
   const filtered = transactions.filter(
     (t) => categoryFilter === "all" || t.category === categoryFilter
   );
 
+  // Compute pagination boundaries
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages - 1);
   const pageItems = filtered.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
+  // Export handler: prompts for passphrase, then downloads encrypted ledger file
   const handleExport = () => {
     const passphrase = window.prompt("Enter a passphrase to encrypt your export:");
     if (!passphrase) return;
     downloadEncryptedExport(exportLedger(), passphrase);
   };
 
+  // Import handler: reads a selected file, prompts for passphrase, decrypts and loads into store
   const handleImport = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -43,9 +58,11 @@ const TransactionHistoryTable = () => {
     const passphrase = window.prompt("Enter the passphrase to decrypt this file:");
     if (!passphrase) return;
 
+    // Use FileReader to read file contents as text
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
+        // Attempt to import decrypted data into the store
         importEncryptedLedger(ev.target.result, passphrase);
         alert("Ledger imported successfully.");
       } catch (err) {
@@ -53,20 +70,25 @@ const TransactionHistoryTable = () => {
       }
     };
     reader.readAsText(file);
+    // Reset file input so the same file can be re-imported
     e.target.value = "";
   };
 
+  // Render the full table with toolbar, headers, rows, and pagination
   return (
     <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden">
+      {/* Toolbar: title, filters, export/import buttons */}
       <div className="flex justify-between items-center p-8 border-b">
         <h2 className="text-4xl font-bold">Transaction History</h2>
 
         <div className="flex gap-4">
+          {/* Placeholder date filter button */}
           <button className="flex items-center gap-2 px-5 py-3 border rounded-full">
             <FiCalendar />
             All Time
           </button>
 
+          {/* Category dropdown filter */}
           <select
             value={categoryFilter}
             onChange={(e) => {
@@ -82,6 +104,7 @@ const TransactionHistoryTable = () => {
             ))}
           </select>
 
+          {/* Export button */}
           <button
             onClick={handleExport}
             className="flex items-center gap-2 px-5 py-3 border rounded-full hover:bg-gray-50"
@@ -90,16 +113,19 @@ const TransactionHistoryTable = () => {
             Export
           </button>
 
+          {/* Import button triggers hidden file input */}
           <button
             onClick={() => fileInputRef.current?.click()}
             className="flex items-center gap-2 px-5 py-3 border rounded-full hover:bg-gray-50"
           >
             Import
           </button>
+          {/* Hidden file input for importing .cfr files */}
           <input ref={fileInputRef} type="file" accept=".cfr,.txt" hidden onChange={handleImport} />
         </div>
       </div>
 
+      {/* Transactions table */}
       <table className="w-full">
         <thead className="bg-gray-50">
           <tr className="text-left">
@@ -113,6 +139,7 @@ const TransactionHistoryTable = () => {
         </thead>
 
         <tbody>
+          {/* Empty state when no transactions match filter */}
           {pageItems.length === 0 ? (
             <tr>
               <td colSpan="6" className="p-8 text-center text-gray-400">
@@ -120,8 +147,10 @@ const TransactionHistoryTable = () => {
               </td>
             </tr>
           ) : (
+            // Map over paginated items to render rows
             pageItems.map((item) => (
               <tr key={item.id} className="border-t">
+                {/* Formatted date */}
                 <td className="p-6 text-xl">
                   {new Date(item.date).toLocaleDateString(undefined, {
                     year: "numeric",
@@ -130,11 +159,13 @@ const TransactionHistoryTable = () => {
                   })}
                 </td>
 
+                {/* Description and type label */}
                 <td className="p-6">
                   <p className="font-bold text-xl">{item.description}</p>
                   <p className="text-gray-500 capitalize">{item.type}</p>
                 </td>
 
+                {/* Category badge with income/expense color */}
                 <td className="p-6">
                   <span
                     className={`px-4 py-2 rounded-full font-medium ${
@@ -147,6 +178,7 @@ const TransactionHistoryTable = () => {
                   </span>
                 </td>
 
+                {/* Amount with sign and currency */}
                 <td
                   className={`p-6 text-2xl font-bold ${
                     item.type === "income" ? "text-green-700" : "text-red-700"
@@ -157,6 +189,7 @@ const TransactionHistoryTable = () => {
                   {item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </td>
 
+                {/* Status icon: checkmark for completed, clock for pending */}
                 <td className="p-6">
                   {item.status === "completed" ? (
                     <FiCheckCircle className="text-green-700" size={28} />
@@ -165,6 +198,7 @@ const TransactionHistoryTable = () => {
                   )}
                 </td>
 
+                {/* Delete action */}
                 <td className="p-6">
                   <button
                     onClick={() => deleteTransaction(item.id)}
@@ -180,12 +214,15 @@ const TransactionHistoryTable = () => {
         </tbody>
       </table>
 
+      {/* Pagination footer */}
       <div className="flex justify-between items-center p-8 border-t">
+        {/* Record count indicator */}
         <p className="text-gray-600 font-medium">
           Showing {filtered.length === 0 ? 0 : currentPage * PAGE_SIZE + 1} to{" "}
           {Math.min((currentPage + 1) * PAGE_SIZE, filtered.length)} of {filtered.length} entries
         </p>
 
+        {/* Previous / Next page controls */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}

@@ -1,7 +1,4 @@
-const PrimaryButton = ({
-  children,
-  onClick
-}) => {
+const PrimaryButton = ({ children, onClick }) => {
   return (
     <button
       onClick={onClick}

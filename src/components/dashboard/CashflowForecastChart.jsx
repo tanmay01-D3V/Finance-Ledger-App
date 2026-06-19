@@ -1,4 +1,6 @@
+// Import projection hook for baseline cashflow data
 import { useProjection } from "../../hooks/useProjection";
+// Import Recharts components for rendering area chart
 import {
   ResponsiveContainer,
   AreaChart,
@@ -9,20 +11,29 @@ import {
   Tooltip
 } from "recharts";
 
+// Custom tooltip for the cashflow forecast chart showing actual vs forecast values
 function CashflowTooltip({ active, payload, currency, projectedMonthlyNet }) {
+  // Render only when tooltip is active and data is available
   if (active && payload && payload.length) {
+    // Extract the hovered data point
     const data = payload[0].payload;
+    // Determine whether this point is actual or forecast
     const isActual = data.type === "actual";
+    // Pick the value from the appropriate series
     const value = isActual ? data.actual : data.forecast;
     return (
+      // Styled tooltip card
       <div className="bg-white/95 backdrop-blur-md p-4 border border-gray-100 rounded-2xl shadow-xl">
+        {/* Month label with type indicator */}
         <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
           {data.name} ({isActual ? "Actual" : "Forecasted"})
         </p>
+        {/* Formatted value display */}
         <p className="text-xl font-bold text-gray-900 mt-1">
           {currency}
           {Math.round(value).toLocaleString()}
         </p>
+        {/* For forecast points, show the underlying monthly net projection */}
         {!isActual && (
           <p className="text-xs text-gray-500 mt-1">
             Based on monthly net change: {projectedMonthlyNet >= 0 ? "+" : ""}
@@ -36,9 +47,12 @@ function CashflowTooltip({ active, payload, currency, projectedMonthlyNet }) {
   return null;
 }
 
+// Dashboard component showing a 12-month cashflow trajectory with actual and forecast areas
 const CashflowForecastChart = () => {
+  // Pull baseline projection data (6 historical + 12 projected months)
   const { baseline, currency } = useProjection({ historicalMonths: 6, projectionMonths: 12 });
 
+  // Map projection months into chart-compatible format with separate actual/forecast series
   const chartData = baseline.months.map((m) => ({
     name: m.monthLabel,
     actual: m.isActual ? m.balance : null,
@@ -46,6 +60,7 @@ const CashflowForecastChart = () => {
     type: m.isActual ? "actual" : "forecast"
   }));
 
+  // Bridge the gap: set the last actual point's forecast to same value so lines connect
   if (chartData.length > 0) {
     let lastActualIdx = -1;
     for (let i = chartData.length - 1; i >= 0; i--) {
@@ -59,10 +74,13 @@ const CashflowForecastChart = () => {
     }
   }
 
+  // Extract the projected monthly net for the tooltip display
   const projectedMonthlyNet = baseline.summary.avgNet;
 
+  // Render the chart card
   return (
     <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-[400px]">
+      {/* Header with title and legend */}
       <div className="flex justify-between items-start mb-6">
         <div>
           <h3 className="text-xl font-bold text-gray-900">Cashflow Forecast</h3>
@@ -70,6 +88,7 @@ const CashflowForecastChart = () => {
             12-month runway trajectory based on average net burn.
           </p>
         </div>
+        {/* Color-coded legend indicators */}
         <div className="flex items-center gap-4 text-xs font-semibold">
           <span className="flex items-center gap-1.5 text-indigo-600">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
@@ -82,9 +101,11 @@ const CashflowForecastChart = () => {
         </div>
       </div>
 
+      {/* Chart area */}
       <div className="flex-1 w-full h-full min-h-[250px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+            {/* Gradient fills for both series */}
             <defs>
               <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.25} />
@@ -96,8 +117,10 @@ const CashflowForecastChart = () => {
               </linearGradient>
             </defs>
 
+            {/* Horizontal grid lines */}
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
 
+            {/* X-axis: month labels */}
             <XAxis
               dataKey="name"
               axisLine={false}
@@ -106,6 +129,7 @@ const CashflowForecastChart = () => {
               dy={10}
             />
 
+            {/* Y-axis: abbreviated currency amounts */}
             <YAxis
               axisLine={false}
               tickLine={false}
@@ -114,6 +138,7 @@ const CashflowForecastChart = () => {
               dx={-10}
             />
 
+            {/* Custom tooltip with monthly net context */}
             <Tooltip
               content={
                 <CashflowTooltip
@@ -123,6 +148,7 @@ const CashflowForecastChart = () => {
               }
             />
 
+            {/* Actual data area — solid indigo line */}
             <Area
               type="monotone"
               dataKey="actual"
@@ -133,6 +159,7 @@ const CashflowForecastChart = () => {
               connectNulls
             />
 
+            {/* Forecast data area — dashed violet line */}
             <Area
               type="monotone"
               dataKey="forecast"

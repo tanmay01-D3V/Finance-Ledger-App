@@ -211,7 +211,12 @@ Icons
 
 Storage
 
-* Browser Local Storage
+* Browser Local Storage (via `useLocalStorage` hook for UI state persistence)
+
+Custom Hooks
+
+* `useProjection` - Memoized cashflow projection with runway metrics
+* `useLocalStorage` - Auto-sync state to localStorage with JSON serialization
 
 ⸻
 
@@ -249,6 +254,20 @@ src
 │   ├── Comparison Charts
 │   └── Result Cards
 │
+├── hooks
+│   ├── useProjection.js
+│   └── useLocalStorage.js
+│
+├── utils
+│   ├── projectCashflow.js
+│   ├── calcRunway.js
+│   ├── amortize.js
+│   ├── resolveFrequency.js
+│   └── encryptExport.js
+│
+├── store
+│   └── useLedgerStore.js
+│
 ├── pages
 ├── routes
 ├── layouts
@@ -282,6 +301,14 @@ The application is fully responsive and optimized for:
 * Tablets
 * Mobile Devices
 * Large Displays
+
+⸻
+
+🔧 UI Enhancements
+
+* **Collapsible Sidebar** - Persistent sidebar state via `useLocalStorage` hook, remembers user preference across sessions
+* **Keyboard Accessible** - ARIA labels and focus management for sidebar toggle
+* **Smooth Transitions** - 300ms animated sidebar collapse/expand
 
 ⸻
 

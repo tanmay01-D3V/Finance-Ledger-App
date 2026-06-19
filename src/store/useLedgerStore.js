@@ -396,6 +396,16 @@ export const useLedgerStore = create((set, get) => ({
       return next;
     }),
 
+  deleteLoan: (id) =>
+    set((state) => {
+      const next = {
+        ...state,
+        loans: state.loans.filter((loan) => loan.id !== id)
+      };
+      persistState(next);
+      return next;
+    }),
+
   exportLedger: () => {
     const state = get();
     return {

@@ -3,7 +3,8 @@ import { NavLink } from "react-router-dom";
 const SidebarItem = ({
   icon,
   title,
-  path
+  path,
+  isCollapsed = false
 }) => {
   return (
     <NavLink
@@ -23,12 +24,13 @@ const SidebarItem = ({
             ? "bg-gray-200 font-semibold"
             : "hover:bg-gray-100"
         }
+        ${isCollapsed ? "justify-center" : ""}
       `
       }
+      title={isCollapsed ? title : undefined}
     >
       {icon}
-
-      <span>{title}</span>
+      {!isCollapsed && <span>{title}</span>}
     </NavLink>
   );
 };

@@ -24,7 +24,7 @@ export function amortize({ principal, annualRate, termMonths, startMonth = null 
       (p * monthlyRate * Math.pow(1 + monthlyRate, n)) /
       (Math.pow(1 + monthlyRate, n) - 1);
   }
-
+ 
   let balance = p;
   let totalInterest = 0;
   const schedule = [];

@@ -7,6 +7,7 @@ import Ledger from "../pages/Ledger";
 import Forecast from "../pages/Forecast";
 import Sandbox from "../pages/Sandbox";
 import Settings from "../pages/Settings";
+import Loans from "../pages/Loans";
 
 const AppRoutes = () => {
   return (
@@ -33,6 +34,11 @@ const AppRoutes = () => {
           <Route
             path="/sandbox"
             element={<Sandbox />}
+          />
+
+          <Route
+            path="/loans"
+            element={<Loans />}
           />
 
           <Route

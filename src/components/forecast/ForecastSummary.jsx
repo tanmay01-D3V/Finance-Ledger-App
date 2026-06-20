@@ -69,8 +69,8 @@ const ForecastSummary = () => {
             ? "Current trajectory shows positive cashflow with no projected exhaustion."
             : `At current burn of ${formatCurrency(baseline.summary.avgBurnRate)}/mo, reserves last approximately ${Math.floor(baselineRunway.runwayMonths)} months.`}
         </p>
-        <button onClick={() => navigate("/forecast")} className="mt-8 font-semibold">
-          Read Analytics →
+        <button onClick={() => navigate("/dashboard")} className="mt-8 font-semibold">
+          View Dashboard →
         </button>
       </div>
     </div>

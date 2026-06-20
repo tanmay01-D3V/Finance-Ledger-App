@@ -315,20 +315,6 @@ export const useLedgerStore = create((set, get) => ({
       return next;
     }),
 
-  updateTransaction: (id, updatedTx) =>
-    set((state) => {
-      const next = {
-        ...state,
-        transactions: state.transactions.map((t) =>
-          t.id === id
-            ? { ...t, ...updatedTx, amount: Number(updatedTx.amount ?? t.amount) }
-            : t
-        )
-      };
-      persistState(next);
-      return next;
-    }),
-
   setStartingBalance: (balance) =>
     set((state) => {
       const next = { ...state, startingBalance: Number(balance) };
@@ -372,23 +358,6 @@ export const useLedgerStore = create((set, get) => ({
             principal: Number(loan.principal),
             annualRate: Number(loan.annualRate),
             termMonths: Number(loan.termMonths)
-          }
-        ]
-      };
-      persistState(next);
-      return next;
-    }),
-
-  addRecurringItem: (item) =>
-    set((state) => {
-      const next = {
-        ...state,
-        recurringItems: [
-          ...state.recurringItems,
-          {
-            id: `rec-${Date.now()}`,
-            ...item,
-            amount: Number(item.amount)
           }
         ]
       };
@@ -442,11 +411,6 @@ export const useLedgerStore = create((set, get) => ({
     return data;
   },
 
-  resetLedger: () =>
-    set(() => {
-      persistState(DEFAULT_STATE);
-      return { ...DEFAULT_STATE };
-    })
 }));
 
 export default useLedgerStore;

@@ -1,5 +1,5 @@
 import { resolveFrequency } from "./resolveFrequency.js";
-import { amortize, getLoanPaymentForMonth } from "./amortize.js";
+import { getLoanPaymentForMonth } from "./amortize.js";
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -238,5 +238,4 @@ function round2(n) {
   return Math.round(n * 100) / 100;
 }
 
-export { amortize };
 export default projectCashflow;

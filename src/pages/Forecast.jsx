@@ -1,4 +1,4 @@
-import ForecastMetrics from "../components/forecast/ForeCastMetrics";
+import ForecastMetrics from "../components/forecast/ForecastMetrics";
 import RunwayChart from "../components/forecast/RunwayChart";
 import ForecastSummary from "../components/forecast/ForecastSummary";
 

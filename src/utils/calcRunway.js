@@ -15,46 +15,10 @@ const MONTH_NAMES = [
  * @returns {Object} Runway metrics
  */
 export function calcRunway({
-  currentBalance,
-  monthlyBurn,
   projection = [],
   startMonthKey = null
 }) {
-  if (projection.length > 0) {
-    return calcRunwayFromProjection(projection, startMonthKey);
-  }
-
-  const balance = Number(currentBalance) || 0;
-  const burn = Number(monthlyBurn) || 0;
-
-  if (burn <= 0) {
-    return {
-      runwayMonths: Infinity,
-      monthsRemaining: Infinity,
-      exhaustionDate: null,
-      exhaustionMonth: null,
-      exhaustionYear: null,
-      burnRate: 0,
-      isFullyFunded: true,
-      label: "Fully Funded"
-    };
-  }
-
-  const runwayMonths = balance / burn;
-  const exhaustion = startMonthKey
-    ? addMonthsToKey(startMonthKey, Math.ceil(runwayMonths))
-    : null;
-
-  return {
-    runwayMonths,
-    monthsRemaining: runwayMonths,
-    exhaustionDate: exhaustion?.date ?? null,
-    exhaustionMonth: exhaustion?.month ?? null,
-    exhaustionYear: exhaustion?.year ?? null,
-    burnRate: burn,
-    isFullyFunded: false,
-    label: formatRunwayLabel(runwayMonths)
-  };
+  return calcRunwayFromProjection(projection, startMonthKey);
 }
 
 function calcRunwayFromProjection(projection, startMonthKey) {
